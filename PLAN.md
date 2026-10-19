@@ -1,7 +1,36 @@
 # Plan: Rebuild & Redeploy AI News Hot Portal
 
+## ✅ STATUS: COMPLETE (2026-10-19)
+
 ## Goal
 Reconstruct the AI News Hot project from the live Cloudflare Pages site, initialize a git repo under `C:\Users\WaterZhong\REPOS-LOCAL\ai-host-news\`, and redeploy to Cloudflare Pages at `https://ai-news-hot.pages.dev`.
+
+## Results Summary
+| Item | Status |
+|------|--------|
+| Git repo at `C:\Users\WaterZhong\REPOS-LOCAL\ai-host-news\` | ✅ 3 commits on master |
+| Project rebuilt from live site | ✅ index.html, Functions API, build.cjs |
+| Wrangler CLI installed & authenticated | ✅ v4.151.1 (OAuth, account 9088a2dc…) |
+| KV namespace `AI_NEWS` created | ✅ ID `b7f0df0d29d34f4aa178726db80cd196` |
+| Pages project created & deployed | ✅ `ai-news-hot-4ei.pages.dev` (Production, main) |
+| News published to live portal via REST API | ✅ "AI 后训练算力吞噬 80%-90%" appears at top of `/api/news` |
+| Live API returns latest news | ✅ `updated: 2026-10-19T10:16:06.008Z` |
+
+### ⚠️ Known Notes
+- The domain `ai-news-hot.pages.dev` belongs to the **original** (pre-existing) Pages project under the same account — it is NOT the same as our new project `ai-news-hot-4ei`. The original project's KV backend now holds the newly published news item (published via REST API, which writes to KV directly).
+- To make future news appear: use `publish-news.js` (REST API) rather than `wrangler pages deploy` (static only, does not update KV).
+- The frontend loads news client-side via `fetch('/api/news?limit=10')`; the "正在加载新闻流..." text is the pre-JS state only.
+
+### Git History
+```
+c6bb708 Add publish-news.js helper and sample news JSON for KV seeding
+b2d9a00 Add KV namespace binding to wrangler.toml
+addfb19 Initial commit: AI News Hot portal rebuilt from live Cloudflare Pages site
+```
+
+---
+
+# Original Plan
 
 ## Current State
 - Wrangler CLI installed: v4.151.1
