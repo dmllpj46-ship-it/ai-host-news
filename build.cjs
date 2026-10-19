@@ -64,6 +64,16 @@ function main() {
   fs.mkdirSync(path.dirname(OUT_FILE), { recursive: true });
   fs.writeFileSync(OUT_FILE, JSON.stringify(output, null, 2));
   console.log(`Build complete: ${news.length} news items written to ${OUT_FILE}`);
+
+  // Copy index.html into dist so Pages serves it at the root
+  const srcHtml = path.join(__dirname, 'index.html');
+  const outHtml = path.join(__dirname, 'dist', 'index.html');
+  if (fs.existsSync(srcHtml)) {
+    fs.copyFileSync(srcHtml, outHtml);
+    console.log(`Copied index.html -> ${outHtml}`);
+  } else {
+    console.warn('WARN: index.html not found at project root, skipped copy.');
+  }
 }
 
 main();
