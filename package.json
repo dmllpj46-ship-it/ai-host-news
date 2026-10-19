@@ -1,0 +1,11 @@
+{
+  "name": "ai-news-hot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI News Hot — Cloudflare Pages site with KV-backed news API",
+  "main": "build.cjs",
+  "scripts": {
+    "build": "node build.cjs",
+    "deploy": "wrangler pages deploy dist --project-name ai-news-hot --branch main"
+  }
+}

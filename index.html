@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI News Hot — 每日 AI 新闻精选</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Syne:wght@500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #06060e;
+    --bg-surface: #0c0c1b;
+    --bg-card: rgba(14, 14, 32, 0.75);
+    --cyan: #00e5ff;
+    --cyan-dim: #00e5ff44;
+    --magenta: #ff2d78;
+    --magenta-dim: #ff2d7844;
+    --amber: #ffb800;
+    --green: #00ff88;
+    --text-primary: #e8eaf0;
+    --text-secondary: #8b91a8;
+    --border-subtle: rgba(255,255,255,0.06);
+    --radius: 16px;
+    --font-display: 'Syne', system-ui, sans-serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'Space Mono', 'Fira Code', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ── Animated Background ── */
+  #particles-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Scanline overlay */
+  .scanlines {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.04;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 229, 255, 0.15) 2px,
+      rgba(0, 229, 255, 0.15) 3px
+    );
+  }
+
+  /* Gradient vignette */
+  .vignette {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(255, 45, 120, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(0, 229, 255, 0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(0, 255, 136, 0.03) 0%, transparent 50%);
+  }
+
+  /* ── Main content ── */
+  .main-wrapper {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ── Header ── */
+  .header {
+    position: relative;
+    padding: 4rem 1.5rem 3rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), var(--magenta), var(--cyan), transparent);
+    animation: headerLine 3s ease-in-out infinite;
+  }
+
+  @keyframes headerLine {
+    0%, 100% { opacity: 0.6; width: 60%; }
+    50% { opacity: 1; width: 75%; }
+  }
+
+  .logo-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    filter: drop-shadow(0 0 20px rgba(255, 45, 120, 0.4));
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  .header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #ffffff 0%, var(--cyan) 40%, #ff6090 70%, var(--amber) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 30px rgba(0, 229, 255, 0.3));
+    line-height: 1.15;
+  }
+
+  .header .subtitle {
+    margin-top: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--cyan);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .header .subtitle .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: var(--cyan);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .header .meta-bar {
+    margin-top: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0.5rem 1.5rem;
+    border-radius: 100px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+  }
+
+  .meta-bar .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.4); }
+  }
+
+  .meta-bar .count {
+    color: var(--cyan);
+    font-weight: 700;
+  }
+
+  /* ── News Container ── */
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2rem 1rem 4rem;
+  }
+
+  /* ── News Card ── */
+  .news-card {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    margin-bottom: 1.25rem;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: cardEnter 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .news-card:nth-child(1) { animation-delay: 0.05s; }
+  .news-card:nth-child(2) { animation-delay: 0.1s; }
+  .news-card:nth-child(3) { animation-delay: 0.15s; }
+  .news-card:nth-child(4) { animation-delay: 0.2s; }
+  .news-card:nth-child(5) { animation-delay: 0.25s; }
+  .news-card:nth-child(6) { animation-delay: 0.3s; }
+  .news-card:nth-child(7) { animation-delay: 0.35s; }
+  .news-card:nth-child(8) { animation-delay: 0.4s; }
+
+  @keyframes cardEnter {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Gradient accent bar on left */
+  .news-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 12px; bottom: 12px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: linear-gradient(180deg, var(--cyan), var(--magenta));
+    transition: all 0.4s ease;
+  }
+
+  .news-card:hover::before {
+    box-shadow: 0 0 16px var(--cyan-dim), 0 0 32px var(--magenta-dim);
+  }
+
+  /* Corner glow */
+  .news-card::after {
+    content: '';
+    position: absolute;
+    top: -1px; right: -1px;
+    width: 40%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan-dim));
+    transition: opacity 0.4s ease;
+    opacity: 0;
+  }
+
+  .news-card:hover {
+    border-color: rgba(255,255,255,0.12);
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 40px rgba(0, 0, 0, 0.4),
+      0 0 80px rgba(0, 229, 255, 0.04),
+      inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+
+  .news-card:hover::after { opacity: 1; }
+
+  .news-card .title {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #eef0f6;
+    margin-bottom: 0.4rem;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    transition: color 0.3s ease;
+  }
+
+  .news-card:hover .title {
+    background: linear-gradient(135deg, var(--cyan), #fff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Meta row */
+  .news-card .meta-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+  }
+
+  .news-card .date {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+  }
+
+  .news-card .tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    padding: 0.18rem 0.6rem;
+    border-radius: 100px;
+    background: rgba(0, 229, 255, 0.08);
+    color: var(--cyan);
+    border: 1px solid rgba(0, 229, 255, 0.18);
+    font-family: var(--font-mono);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    transition: all 0.3s ease;
+  }
+
+  .news-card .tag:hover {
+    background: rgba(0, 229, 255, 0.16);
+    border-color: var(--cyan);
+    box-shadow: 0 0 12px var(--cyan-dim);
+  }
+
+  .news-card .summary {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    line-height: 1.55;
+  }
+
+  /* Content preview */
+  .news-card .content-preview {
+    font-size: 0.86rem;
+    color: #b0b6c8;
+    line-height: 1.7;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease, margin 0.35s ease;
+  }
+
+  .news-card .content-preview.open {
+    max-height: 2000px;
+    opacity: 1;
+    margin-top: 0.75rem;
+  }
+
+  .news-card .content-preview h2 {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    color: var(--cyan);
+    margin: 0.75rem 0 0.35rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid rgba(0, 229, 255, 0.1);
+  }
+
+  .news-card .content-preview h3 {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    color: #d0d4e2;
+    margin: 0.6rem 0 0.25rem;
+  }
+
+  .news-card .content-preview ul,
+  .news-card .content-preview ol {
+    padding-left: 1.25rem;
+    margin: 0.4rem 0;
+  }
+
+  .news-card .content-preview li {
+    margin-bottom: 0.2rem;
+    color: #b0b6c8;
+  }
+
+  .news-card .content-preview p { margin-bottom: 0.6rem; }
+
+  .news-card .content-preview strong {
+    font-weight: 600;
+    color: #e0e4f0;
+  }
+
+  .news-card .content-preview code {
+    background: rgba(0, 229, 255, 0.1);
+    color: var(--cyan);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-family: var(--font-mono);
+    border: 1px solid rgba(0, 229, 255, 0.15);
+  }
+
+  .news-card .content-preview a {
+    color: var(--cyan);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(0, 229, 255, 0.3);
+    transition: border-color 0.2s;
+  }
+
+  .news-card .content-preview a:hover {
+    border-bottom-color: var(--cyan);
+  }
+
+  .news-card .content-preview blockquote {
+    border-left: 3px solid var(--cyan-dim);
+    padding-left: 1rem;
+    margin: 0.6rem 0;
+    color: #9ca0b4;
+    font-style: italic;
+  }
+
+  /* Toggle button */
+  .toggle-btn {
+    background: none;
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    color: var(--cyan);
+    font-size: 0.78rem;
+    cursor: pointer;
+    padding: 0.35rem 1rem;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    border-radius: 100px;
+    letter-spacing: 0.04em;
+    transition: all 0.3s ease;
+    margin-top: 0.25rem;
+  }
+
+  .toggle-btn:hover {
+    background: rgba(0, 229, 255, 0.1);
+    border-color: var(--cyan);
+    box-shadow: 0 0 18px var(--cyan-dim);
+    transform: translateY(-1px);
+  }
+
+  .toggle-btn:active { transform: scale(0.96); }
+
+  /* ── Empty state ── */
+  .empty {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: var(--text-secondary);
+  }
+
+  .empty .empty-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 1rem;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .empty h2 {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+  }
+
+  .empty p { font-size: 0.9rem; }
+
+  /* Loading spinner */
+  .loading-spinner {
+    width: 36px; height: 36px;
+    border: 2px solid rgba(255,255,255,0.08);
+    border-top-color: var(--cyan);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 0.75rem;
+    box-shadow: 0 0 18px var(--cyan-dim);
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Admin section ── */
+  .admin-section {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 1rem 4rem;
+  }
+
+  .admin-toggle {
+    display: block;
+    margin: 0 auto;
+    padding: 0.55rem 2rem;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 100px;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    letter-spacing: 0.06em;
+    transition: all 0.35s ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .admin-toggle:hover {
+    border-color: var(--cyan-dim);
+    color: var(--cyan);
+    box-shadow: 0 0 24px rgba(0, 229, 255, 0.08);
+  }
+
+  .admin-panel {
+    margin-top: 1rem;
+    padding: 1.75rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: none;
+    animation: cardEnter 0.5s ease forwards;
+  }
+
+  .admin-panel.open { display: block; }
+
+  .admin-panel h3 {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    margin-bottom: 1.25rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .admin-panel h3 .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--magenta);
+    box-shadow: 0 0 10px var(--magenta-dim);
+  }
+
+  .admin-panel label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .admin-panel input,
+  .admin-panel textarea {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    font-size: 0.88rem;
+    margin-bottom: 1rem;
+    font-family: var(--font-body);
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    outline: none;
+  }
+
+  .admin-panel input:focus,
+  .admin-panel textarea:focus {
+    border-color: var(--cyan-dim);
+    box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.06), 0 0 18px rgba(0, 229, 255, 0.04);
+  }
+
+  .admin-panel textarea {
+    min-height: 100px;
+    resize: vertical;
+    line-height: 1.6;
+  }
+
+  .admin-panel .btn-submit {
+    background: linear-gradient(135deg, var(--cyan), #0098b0);
+    color: #000;
+    border: none;
+    padding: 0.7rem 2rem;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-weight: 700;
+    font-family: var(--font-display);
+    letter-spacing: 0.03em;
+    transition: all 0.35s ease;
+    box-shadow: 0 4px 20px rgba(0, 229, 255, 0.2);
+  }
+
+  .admin-panel .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(0, 229, 255, 0.35);
+  }
+
+  .admin-panel .btn-submit:active { transform: scale(0.97); }
+
+  .admin-panel .status {
+    margin-top: 0.75rem;
+    font-size: 0.82rem;
+    font-family: var(--font-mono);
+  }
+
+  .admin-panel .status.ok { color: var(--green); text-shadow: 0 0 8px rgba(0, 255, 136, 0.3); }
+  .admin-panel .status.err { color: var(--magenta); text-shadow: 0 0 8px rgba(255, 45, 120, 0.3); }
+
+  /* ── Footer ── */
+  .site-footer {
+    text-align: center;
+    padding: 3rem 1rem 3rem;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    border-top: 1px solid var(--border-subtle);
+    letter-spacing: 0.06em;
+  }
+
+  .site-footer .glow-text {
+    background: linear-gradient(90deg, var(--cyan), var(--magenta));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .header { padding: 2.5rem 1rem 2rem; }
+    .header h1 { font-size: 1.8rem; }
+    .news-card { padding: 1.25rem; }
+    .meta-bar { font-size: 0.7rem; gap: 0.75rem; padding: 0.4rem 1rem; }
+    .container { padding: 1.25rem 0.75rem 3rem; }
+    .admin-panel { padding: 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Animated particle background -->
+<canvas id="particles-canvas"></canvas>
+
+<!-- Scanline overlay -->
+<div class="scanlines"></div>
+
+<!-- Vignette gradient -->
+<div class="vignette"></div>
+
+<div class="main-wrapper">
+
+  <!-- Header -->
+  <header class="header">
+    <span class="logo-icon">⚡</span>
+    <h1>AI News Hot</h1>
+    <p class="subtitle">
+      <span id="typing-text"></span><span class="cursor"></span>
+    </p>
+    <div class="meta-bar" id="header-meta">
+      <span class="dot"></span>
+      <span>LIVE</span>
+      <span id="meta-count">—</span>
+      <span id="meta-updated">—</span>
+    </div>
+  </header>
+
+  <!-- News Container -->
+  <div class="container" id="news-container">
+    <div class="empty">
+      <div class="loading-spinner"></div>
+      <p style="color:var(--cyan);font-family:var(--font-mono);font-size:0.85rem">正在加载新闻流...</p>
+    </div>
+  </div>
+
+  <!-- Admin Section -->
+  <div class="admin-section">
+    <button class="admin-toggle" id="admin-toggle">[ + ] 发布新闻</button>
+    <div class="admin-panel" id="admin-panel">
+      <h3><span class="dot"></span>发布新闻到 AI News Hot</h3>
+      <label>标题</label>
+      <input type="text" id="news-title" placeholder="新闻标题...">
+      <label>标签（逗号分隔）</label>
+      <input type="text" id="news-tags" placeholder="ai, model-release, open-source">
+      <label>摘要（可选）</label>
+      <input type="text" id="news-summary" placeholder="一句话摘要...">
+      <label>正文（支持 Markdown）</label>
+      <textarea id="news-content" placeholder="## 标题&#10;&#10;正文内容..."></textarea>
+      <label>API Key</label>
+      <input type="password" id="news-apikey" placeholder="X-API-Key">
+      <button class="btn-submit" id="news-submit">⬆ 发布</button>
+      <div class="status" id="news-status"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p><span class="glow-text">◈ AI NEWS HOT ◈</span> &nbsp; &copy; 2026 &nbsp; · &nbsp; Powered by Cloudflare Pages</p>
+  </footer>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   PARTICLE BACKGROUND — Network graph
+   ═══════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('particles-canvas');
+  const ctx = canvas.getContext('2d');
+  let w, h, particles = [];
+  const PARTICLE_COUNT = 55;
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Create particles
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    particles.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: (Math.random() - 0.5) * 0.25,
+      r: Math.random() * 1.5 + 0.5,
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+
+    // Update & draw particles
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+
+      // Wrap around
+      if (p.x < -10) p.x = w + 10;
+      if (p.x > w + 10) p.x = -10;
+      if (p.y < -10) p.y = h + 10;
+      if (p.y > h + 10) p.y = -10;
+
+      // Draw particle
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 229, 255, 0.35)';
+      ctx.fill();
+    }
+
+    // Draw connections
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 150) {
+          const alpha = (1 - dist / 150) * 0.12;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(0, 229, 255, ${alpha})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ═══════════════════════════════════════════
+   TYPING EFFECT
+   ═══════════════════════════════════════════ */
+(function() {
+  const texts = [
+    '每日 AI 新闻精选',
+    'Curated AI news, daily.',
+    'The pulse of artificial intelligence.',
+  ];
+  let textIdx = 0, charIdx = 0, isDeleting = false;
+  const el = document.getElementById('typing-text');
+  const typeSpeed = 60, deleteSpeed = 30, pauseTime = 2000;
+
+  function type() {
+    const current = texts[textIdx];
+    if (isDeleting) {
+      el.textContent = current.substring(0, charIdx - 1);
+      charIdx--;
+    } else {
+      el.textContent = current.substring(0, charIdx + 1);
+      charIdx++;
+    }
+
+    if (!isDeleting && charIdx === current.length) {
+      setTimeout(() => { isDeleting = true; type(); }, pauseTime);
+      return;
+    }
+    if (isDeleting && charIdx === 0) {
+      isDeleting = false;
+      textIdx = (textIdx + 1) % texts.length;
+      setTimeout(type, 400);
+      return;
+    }
+    setTimeout(type, isDeleting ? deleteSpeed : typeSpeed);
+  }
+  type();
+})();
+
+/* ═══════════════════════════════════════════
+   MAIN — Load & render news
+   ═══════════════════════════════════════════ */
+async function main() {
+  try {
+    const res = await fetch('/api/news?limit=10');
+    const data = await res.json();
+
+    // Header meta — 最新 10 条
+    const displayed = data.news.length;
+    document.getElementById('meta-count').textContent =
+      `最新 ${displayed} 条新闻 · 首页优先加载 10 条`;
+    document.getElementById('meta-updated').textContent =
+      `· 更新于 ${new Date(data.updated).toLocaleString('zh-CN')}`;
+
+    const container = document.getElementById('news-container');
+    container.innerHTML = '';
+
+    if (data.news.length === 0) {
+      container.innerHTML = `
+        <div class="empty">
+          <span class="empty-icon">📡</span>
+          <h2>暂无新闻</h2>
+          <p>新闻正在路上，敬请期待。</p>
+        </div>`;
+      return;
+    }
+
+    // Render cards
+    data.news.forEach((item, idx) => {
+      const card = document.createElement('div');
+      card.className = 'news-card';
+      card.style.animationDelay = (0.05 * Math.min(idx, 19)) + 's';
+
+      const tagsHtml = (item.tags || [])
+        .map(t => `<span class="tag">#${t}</span>`).join('');
+
+      const dateStr = item.date;
+
+      // Simple markdown to HTML
+      let contentHtml = item.content
+        .replace(/### (.+)/g, '<h3>$1</h3>')
+        .replace(/## (.+)/g, '<h2>$1</h2>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+        .replace(/^- (.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+
+      card.innerHTML = `
+        <div class="title">${item.title}</div>
+        <div class="meta-row">
+          <span class="date">${dateStr}</span>
+          ${tagsHtml}
+        </div>
+        <div class="summary">${item.summary || ''}</div>
+        <div class="content-preview" id="content-${idx}">
+          <p>${contentHtml}</p>
+        </div>
+        <button class="toggle-btn" data-idx="${idx}">▶ 展开阅读</button>
+      `;
+
+      container.appendChild(card);
+    });
+
+    // Toggle content
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = btn.dataset.idx;
+        const content = document.getElementById('content-' + idx);
+        const isOpen = content.classList.toggle('open');
+        btn.textContent = isOpen ? '▲ 收起' : '▶ 展开阅读';
+        btn.style.borderColor = isOpen
+          ? 'rgba(255, 45, 120, 0.4)'
+          : 'rgba(0, 229, 255, 0.2)';
+        btn.style.color = isOpen ? 'var(--magenta)' : 'var(--cyan)';
+      });
+    });
+
+  } catch (err) {
+    document.getElementById('news-container').innerHTML = `
+      <div class="empty">
+        <span class="empty-icon">⚠️</span>
+        <h2>加载失败</h2>
+        <p>请刷新页面重试。</p>
+      </div>`;
+    console.error(err);
+  }
+}
+
+main();
+
+/* ═══════════════════════════════════════════
+   ADMIN PANEL
+   ═══════════════════════════════════════════ */
+document.getElementById('admin-toggle').addEventListener('click', () => {
+  const panel = document.getElementById('admin-panel');
+  panel.classList.toggle('open');
+  const btn = document.getElementById('admin-toggle');
+  btn.textContent = panel.classList.contains('open') ? '[ − ] 收起面板' : '[ + ] 发布新闻';
+});
+
+document.getElementById('news-submit').addEventListener('click', async () => {
+  const title = document.getElementById('news-title').value.trim();
+  const content = document.getElementById('news-content').value.trim();
+  const apiKey = document.getElementById('news-apikey').value.trim();
+  const status = document.getElementById('news-status');
+
+  if (!title || !content) {
+    status.className = 'status err';
+    status.textContent = '⚠ 标题和正文不能为空';
+    return;
+  }
+  if (!apiKey) {
+    status.className = 'status err';
+    status.textContent = '⚠ 请输入 API Key';
+    return;
+  }
+
+  const tagsRaw = document.getElementById('news-tags').value.trim();
+  const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+  const summary = document.getElementById('news-summary').value.trim();
+
+  status.className = 'status';
+  status.textContent = '⏳ 发布中...';
+
+  try {
+    const res = await fetch('/api/news', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+      body: JSON.stringify({ title, content, tags, summary }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      status.className = 'status ok';
+      status.textContent = '✓ 发布成功！刷新页面查看。';
+      document.getElementById('news-title').value = '';
+      document.getElementById('news-tags').value = '';
+      document.getElementById('news-summary').value = '';
+      document.getElementById('news-content').value = '';
+    } else {
+      status.className = 'status err';
+      status.textContent = '✗ ' + (data.error || '发布失败');
+    }
+  } catch (e) {
+    status.className = 'status err';
+    status.textContent = '✗ 网络错误：' + e.message;
+  }
+});
+</script>
+
+</body>
+</html>
