@@ -85,6 +85,38 @@ export async function onRequestPost(context) {
       );
     }
 
+    // Deduplicate by normalized title: re-posting the same headline updates
+    // the existing entry instead of creating a duplicate.
+    const normalized = String(title).replace(/\s+/g, ' ').trim().toLowerCase();
+    const allKeys = await kv.list({ limit: 1000 });
+    let existing = null;
+    for (const key of allKeys.keys) {
+      const val = await kv.get(key.name, { type: 'json' });
+      if (val && val.title && val.title.replace(/\s+/g, ' ').trim().toLowerCase() === normalized) {
+        existing = { id: key.name, item: val };
+        break;
+      }
+    }
+
+    if (existing) {
+      const updatedItem = {
+        ...existing.item,
+        id: existing.id,
+        title,
+        content,
+        tags: Array.isArray(tags) ? tags : existing.item.tags || [],
+        summary: summary || existing.item.summary || '',
+        date: date || existing.item.date || new Date().toISOString().split('T')[0],
+        updatedAt: new Date().toISOString(),
+      };
+      await kv.put(existing.id, JSON.stringify(updatedItem));
+
+      return new Response(
+        JSON.stringify({ success: true, updated: true, news: updatedItem }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     const id = (title.replace(/[^\w\u4e00-\u9fff]/g, '-') + '-' + Date.now()).toLowerCase();
     const newsItem = {
       id,
