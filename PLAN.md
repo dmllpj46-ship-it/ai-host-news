@@ -1,32 +1,60 @@
 # Plan: Rebuild & Redeploy AI News Hot Portal
 
-## ✅ STATUS: COMPLETE (2026-10-19)
+## ✅ STATUS: COMPLETE (2026-10-19) — switched to NEW project URL
 
 ## Goal
-Reconstruct the AI News Hot project from the live Cloudflare Pages site, initialize a git repo under `C:\Users\WaterZhong\REPOS-LOCAL\ai-host-news\`, and redeploy to Cloudflare Pages at `https://ai-news-hot.pages.dev`.
+Reconstruct the AI News Hot project from the live Cloudflare Pages site, initialize a git repo under `C:\Users\WaterZhong\REPOS-LOCAL\ai-host-news\`, and redeploy to Cloudflare Pages.
 
 ## Results Summary
 | Item | Status |
 |------|--------|
-| Git repo at `C:\Users\WaterZhong\REPOS-LOCAL\ai-host-news\` | ✅ 3 commits on master |
+| Git repo at `C:\Users\WaterZhong\REPOS-LOCAL\ai-host-news\` | ✅ 5 commits on master |
 | Project rebuilt from live site | ✅ index.html, Functions API, build.cjs |
 | Wrangler CLI installed & authenticated | ✅ v4.151.1 (OAuth, account 9088a2dc…) |
-| KV namespace `AI_NEWS` created | ✅ ID `b7f0df0d29d34f4aa178726db80cd196` |
+| KV namespace `AI_NEWS` created (ours) | ✅ ID `b7f0df0d29d34f4aa178726db80cd196` |
 | Pages project created & deployed | ✅ `ai-news-hot-4ei.pages.dev` (Production, main) |
-| News published to live portal via REST API | ✅ "AI 后训练算力吞噬 80%-90%" appears at top of `/api/news` |
-| Live API returns latest news | ✅ `updated: 2026-10-19T10:16:06.008Z` |
+| **New URL homepage** | ✅ **https://ai-news-hot-4ei.pages.dev/** returns HTML |
+| **New URL API** | ✅ **https://ai-news-hot-4ei.pages.dev/api/news** returns JSON news |
 
-### ⚠️ Known Notes
-- The domain `ai-news-hot.pages.dev` belongs to the **original** (pre-existing) Pages project under the same account — it is NOT the same as our new project `ai-news-hot-4ei`. The original project's KV backend now holds the newly published news item (published via REST API, which writes to KV directly).
-- To make future news appear: use `publish-news.js` (REST API) rather than `wrangler pages deploy` (static only, does not update KV).
-- The frontend loads news client-side via `fetch('/api/news?limit=10')`; the "正在加载新闻流..." text is the pre-JS state only.
+## 🔄 URL Switch — old → new
+
+| | Old (pre-existing) | New (ours) |
+|---|---|---|
+| **URL** | `https://ai-news-hot.pages.dev` | **`https://ai-news-hot-4ei.pages.dev`** |
+| Owner | original project (skill's project) | our rebuild |
+| KV | old namespace (all historical news) | `AI_NEWS` `b7f0df0d…` (seeded 1 item) |
+
+**Why a suffix?** `wrangler pages project create ai-news-hot` → Cloudflare replied
+*"will be available at https://ai-news-hot-4ei.pages.dev"* because
+`ai-news-hot.pages.dev` was already assigned to the pre-existing project.
+
+### Bugs fixed during the switch
+1. **`dist/` had no `index.html`** (build.cjs only wrote news-data.json) → 404 on homepage.
+   Fixed: `build.cjs` now copies `index.html` → `dist/`.
+2. **Functions not deployed** (wrangler ran from workspace cwd, couldn't find `functions/`).
+   Fixed: always deploy with `--cwd <project-root>` so wrangler bundles `functions/`.
+3. **`[[id]].js` shadowed `/api/news`** — the optional catch-all matched `/api/news`
+   itself and returned `404 {"error":"News item not found"}` before `index.js` ran.
+   Fixed: renamed `[[id]].js` → `[id].js` (single-segment, matches only `/api/news/:id`).
 
 ### Git History
 ```
+a1b0dfe Fix build.cjs to copy index.html to dist; rename [[id]].js to [id].js
+e3d1f7d Update PLAN.md with completion status and results summary
 c6bb708 Add publish-news.js helper and sample news JSON for KV seeding
 b2d9a00 Add KV namespace binding to wrangler.toml
 addfb19 Initial commit: AI News Hot portal rebuilt from live Cloudflare Pages site
 ```
+
+### How to publish news to the NEW portal
+Update `publish-news.js` to point at the new URL, then run it:
+```js
+fetch('https://ai-news-hot-4ei.pages.dev/api/news', { method: 'POST', ... })
+```
+
+### ⚠️ Pending (optional)
+- The new KV contains only the seeded sample item. Migrate historical news from the
+  old project's KV if you want the full archive on the new URL.
 
 ---
 

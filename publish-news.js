@@ -5,7 +5,7 @@ const data = JSON.stringify({
   tags: ['ai', 'post-training', 'rl', 'scaling-law']
 });
 
-fetch('https://ai-news-hot.pages.dev/api/news', {
+fetch('https://ai-news-hot-4ei.pages.dev/api/news', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
